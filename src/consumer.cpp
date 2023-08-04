@@ -20,6 +20,8 @@ void consumer_f (
         int passthru)
 {
     diy::mpi::communicator local_(local);
+    std::string infile      = "example1.h5m";
+    std::string read_opts   = "PARALLEL=READ_PART;PARTITION_METHOD=SQIJ;PARALLEL_RESOLVE_SHARED_ENTS";
 
     // debug
     fmt::print(stderr, "consumer: local comm rank {} size {}\n", local_.rank(), local_.size());
@@ -50,14 +52,23 @@ void consumer_f (
 
         // set lowfive properties
         if (passthru)
-            vol_plugin.set_passthru("example1.h5", "*");
+            vol_plugin.set_passthru(infile, "*");
         if (metadata)
-            vol_plugin.set_memory("example1.h5", "*");
-        vol_plugin.set_intercomm("example1.h5", "*", 0);
+            vol_plugin.set_memory(infile, "*");
+        vol_plugin.set_intercomm(infile, "*", 0);
     }
+
+    // initialize moab
+    Interface*                      mbi = new Core();                       // moab interface
+    EntityHandle                    root;
+    ErrorCode                       rval;
+    rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
 
     // debug
     fmt::print(stderr, "*** consumer before opening file ***\n");
+
+    // read file
+    rval = mbi->load_file(infile.c_str(), &root, read_opts.c_str() ); ERR(rval);
 
     // clean up
     if (!shared)

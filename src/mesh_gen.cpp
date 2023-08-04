@@ -21,7 +21,7 @@ void tet_mesh_gen(int *mesh_size,                        // mesh size (i,j,k) nu
         EntityHandle *mesh_set,                          // moab mesh set
         ParallelComm *mbpc,                              // moab parallel communicator
         diy::RegularDecomposer<Bounds>& decomp,          // diy decomposition
-        diy::RoundRobinAssigner& assign)                // diy assignment
+        diy::RoundRobinAssigner& assign)                 // diy assignment
 {
     create_tets_and_verts(mesh_size, mbint, mesh_set, decomp, assign, mbpc);
     resolve_and_exchange(mbint, mesh_set, mbpc);

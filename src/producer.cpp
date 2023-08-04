@@ -57,20 +57,24 @@ void producer_f (
     fmt::print(stderr, "*** producer generating moab mesh ***\n");
 
     // create moab mesh
-    int                             mesh_type = 0;                          // source mesh type (0 = hex, 1 = tet)
+    int                             mesh_type = 1;                          // source mesh type (0 = hex, 1 = tet)
     int                             mesh_size = 100;                        // source mesh size per side
     int                             mesh_slab = 0;                          // block shape (0 = cubes; 1 = slabs)
     double                          factor = 1.0;                           // scaling factor on field values
     Interface*                      mbi = new Core();                       // moab interface
-    ParallelComm*                   pc  = new ParallelComm(mbi, local);     // moab communicator TODO: necessary?
+    ParallelComm*                   pc  = new ParallelComm(mbi, local);     // moab communicator
     EntityHandle                    root;
-    mbi->create_meshset(MESHSET_SET, root);
+    ErrorCode                       rval;
+    rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
     PrepMesh(mesh_type, mesh_size, mesh_slab, mbi, pc, root, factor, false);
 
-    // TODO: write file
+    // write file
+    std::string outfile     = "example1.h5m";
+    std::string write_opts  = "PARALLEL=WRITE_PART";
+    rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
 
     // debug
-    fmt::print(stderr, "*** producer after closing file ***\n");
+    fmt::print(stderr, "*** producer after writing file ***\n");
 
     if (!shared)
         H5Pclose(plist);
