@@ -22,7 +22,7 @@ void consumer_f (
     diy::mpi::communicator local_(local);
 
     // debug
-    fmt::print(stderr, "consumer: local comm rank {} size {}\n", my_rank, ntasks);
+    fmt::print(stderr, "consumer: local comm rank {} size {}\n", local_.rank(), local_.size());
 
     // wait for data to be ready
     if (passthru && !metadata && !shared)

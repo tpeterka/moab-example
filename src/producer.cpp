@@ -27,7 +27,7 @@ void producer_f (
     diy::mpi::communicator local_(local);
 
     // debug
-    fmt::print(stderr, "producer: local comm rank {} size {}\n", my_rank, ntasks);
+    fmt::print(stderr, "producer: local comm rank {} size {}\n", local_.rank(), local_.size());
 
     // VOL plugin and properties
     hid_t plist;
