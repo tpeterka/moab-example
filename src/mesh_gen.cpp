@@ -1,23 +1,9 @@
-//---------------------------------------------------------------------------
-//
-// generates moab meshes on the fly
-//
-// Tom Peterka
-// Argonne National Laboratory
-// 9700 S. Cass Ave.
-// Argonne, IL 60439
-// tpeterka@mcs.anl.gov
-//
-//--------------------------------------------------------------------------
-
 #include "prod-con.hpp"
 
 using namespace std;
 using namespace moab;
 
-//
 // generate a regular structured hex mesh
-//
 void hex_mesh_gen(int *mesh_size,                       // mesh size (i,j,k) number of vertices in each dim
         Interface *mbint,                               // moab interface instance
         EntityHandle *mesh_set,                         // moab mesh set
@@ -29,9 +15,7 @@ void hex_mesh_gen(int *mesh_size,                       // mesh size (i,j,k) num
     resolve_and_exchange(mbint, mesh_set, mbpc);
 }
 
-//
 // generate a regular structured tet mesh
-//
 void tet_mesh_gen(int *mesh_size,                        // mesh size (i,j,k) number of vertices in each dim
         Interface *mbint,                                // moab interface instance
         EntityHandle *mesh_set,                          // moab mesh set
@@ -43,10 +27,8 @@ void tet_mesh_gen(int *mesh_size,                        // mesh size (i,j,k) nu
     resolve_and_exchange(mbint, mesh_set, mbpc);
 }
 
-//
 // create hex cells and vertices
-//
-void create_hexes_and_verts(int *mesh_size,   // mesh size (i,j,k) number of vertices in each dim
+void create_hexes_and_verts(int *mesh_size,     // mesh size (i,j,k) number of vertices in each dim
         Interface *mbint,                       // moab interface instance
         EntityHandle *mesh_set,                 // moab mesh set
         diy::RegularDecomposer<Bounds>& decomp, // diy decomposition
@@ -216,9 +198,7 @@ void create_hexes_and_verts(int *mesh_size,   // mesh size (i,j,k) number of ver
     rval = mbint->release_interface(iface); ERR;
 }
 
-//
 // create tet cells and vertices
-//
 void create_tets_and_verts(int *mesh_size,      // mesh size (i,j,k) number of vertices in each dim
         Interface *mbint,                       // moab interface instance
         EntityHandle *mesh_set,                 // moab parallel communicator
@@ -422,9 +402,7 @@ void create_tets_and_verts(int *mesh_size,      // mesh size (i,j,k) number of v
 
 }
 
-//
 // resolve shared entities
-//
 void resolve_and_exchange(Interface *mbint,       // mbint: moab interface instance
         EntityHandle *mesh_set, // mesh_set: moab mesh set
         ParallelComm *mbpc)     // mbpc: moab parallel communicator
@@ -436,4 +414,271 @@ void resolve_and_exchange(Interface *mbint,       // mbint: moab interface insta
     rval = mbint->tag_get_handle("HANDLEID", 1, MB_TYPE_HANDLE, global_id_tag, MB_TAG_DENSE); ERR;
     rval = mbpc->resolve_shared_ents(*mesh_set, -1, -1, &global_id_tag); ERR;
 }
+
+// return a value for the field position (simple magnitude)
+double PhysField(double x,
+        double y,
+        double z,
+        double factor)
+{
+    return factor * sqrt(x * x + y * y + z * z);
+}
+
+// add a value to each element in the field
+void PutElementField(Interface *mbi,
+        EntityHandle eh,
+        const char *tagname,
+        double factor)
+{
+    Range elems;
+    ErrorCode rval;
+    const double defVal = 0.;
+    Tag fieldTag;
+
+    rval = mbi->get_entities_by_dimension(eh, 3, elems); ERR;
+    rval = mbi->tag_get_handle(tagname, 1, MB_TYPE_DOUBLE, fieldTag,
+            MB_TAG_DENSE|MB_TAG_CREAT, &defVal); ERR;
+
+    for(int i = 0; i< (int)elems.size(); i++)
+    {
+        EntityHandle elem = elems[i];
+        double pos[3];
+        rval = mbi->get_coords(&elem, 1, pos); ERR;
+        double field_value =  PhysField(pos[0], pos[1], pos[2], factor);
+        rval = mbi->tag_set_data(fieldTag, &elem, 1, &field_value); ERR;
+
+        // debug
+        //     fprintf(stderr, "setting element %d: f(%.3lf, %.3lf, %.3lf) = %.3lf\n",
+        // 	    i, x, y, z, fieldValue);
+    }
+}
+
+// gets the element field
+void GetElementField(Interface *mbi,
+        EntityHandle eh,
+        const char *tagname,
+        double factor,
+        MPI_Comm comm,
+        bool debug)
+{
+    Range elems;
+    double *field_values;
+
+    mbi->get_entities_by_dimension(eh, 3, elems);
+
+    Tag field_tag;
+    int count;
+    mbi->tag_get_handle(tagname, 1, MB_TYPE_DOUBLE, field_tag);
+    mbi->tag_iterate(field_tag, elems.begin(), elems.end(), count,
+            (void *&)field_values);
+    assert(count == (int)elems.size());
+
+    for(int i = 0; i < (int)elems.size(); i++)
+    {
+        EntityHandle elem = elems[i];
+        double pos[3];
+        mbi->get_coords(&elem, 1, pos);
+        double ref_value = PhysField(pos[0], pos[1], pos[2], factor);
+
+        // debug
+        if (debug)
+            fprintf(stderr, "element %d: f(%.3lf, %.3lf, %.3lf) = %.3lf "
+                    "ref_value = %.3lf\n",
+                    i, pos[0], pos[1], pos[2], field_values[i], ref_value);
+    }
+}
+
+// add a value to each vertex in the field
+void PutVertexField(Interface *mbi,
+        EntityHandle eh,
+        const char *tagname,
+        double factor)
+{
+    Range verts;
+
+    mbi->get_entities_by_type(eh, MBVERTEX, verts);
+
+    const double defVal = 0.;
+    Tag fieldTag;
+    mbi->tag_get_handle(tagname, 1, MB_TYPE_DOUBLE, fieldTag,
+            MB_TAG_DENSE|MB_TAG_CREAT, &defVal);
+
+    int numVerts = verts.size();
+
+    for(int i = 0; i < numVerts; i++)
+    {
+        EntityHandle vert = verts[i];
+        double pos[3];
+        mbi->get_coords(&vert, 1, pos);
+        double fieldValue =  PhysField(pos[0], pos[1], pos[2], factor);
+        mbi->tag_set_data(fieldTag, &vert, 1, &fieldValue);
+
+        // debug
+        //     fprintf(stderr, "setting element %d: f(%.3lf, %.3lf, %.3lf) = %.3lf\n",
+        // 	    i, pos[0], pos[1], pos[2], fieldValue);
+    }
+}
+
+// gets the vertex field
+void GetVertexField(Interface *mbi,
+        EntityHandle eh,
+        const char *tagname,
+        double factor,
+        MPI_Comm comm,
+        bool debug)
+{
+    Range verts;
+    double *field_values;
+
+    mbi->get_entities_by_type(eh, MBVERTEX, verts);
+
+    Tag field_tag;
+    int count;
+    mbi->tag_get_handle(tagname, 1, MB_TYPE_DOUBLE, field_tag);
+    mbi->tag_iterate(field_tag, verts.begin(), verts.end(), count, (void *&)field_values);
+    assert(count == (int)verts.size());
+
+    for(int i = 0; i < (int)verts.size(); i++)
+    {
+        EntityHandle vert = verts[i];
+        double pos[3];
+        mbi->get_coords(&vert, 1, pos);
+        double ref_value = PhysField(pos[0], pos[1], pos[2], factor);
+
+        // debug
+        if (debug)
+            fprintf(stderr, "vertex %d: f(%.3lf, %.3lf, %.3lf) = %.3lf "
+                    "ref_value = %.3lf\n",
+                    i, pos[0], pos[1], pos[2], field_values[i], ref_value);
+    }
+}
+// prints mesh statistics (for debugging)
+void PrintMeshStats(Interface *mbint,        // moab interface
+        EntityHandle *mesh_set,  // moab mesh set
+        ParallelComm *mbpc)      // moab parallel communicator
+{
+    Range range;
+    ErrorCode rval;
+    static int mesh_num = 0;                 // counts how many time this function is called
+    float loc_verts = 0.0;                   // num local verts (fractional for shared verts)
+    float glo_verts;                         // global number of verts
+    float loc_share_verts = 0.0;             // num local shared verts (fractional)
+    float glo_share_verts;                   // global number of shared verts
+    int loc_cells, glo_cells;                // local and global number of cells (no sharing)
+    int rank;
+
+    MPI_Comm_rank(mbpc->comm(), &rank);
+
+    // get local quantities
+    range.clear();
+    rval = mbint->get_entities_by_dimension(*mesh_set, 0, range); ERR;
+
+    // compute fractional contribution of shared vertices attributed to this proc
+    int ps[MAX_SHARING_PROCS];               // sharing procs for a vert
+    EntityHandle hs[MAX_SHARING_PROCS];      // handles of shared vert on sharing procs
+    int num_ps = 0;                          // number of sharing procs, returned by moab
+    unsigned char pstat;                     // pstatus, returned by moab
+    for (Range::iterator verts_it = range.begin(); verts_it != range.end();
+            verts_it++)
+    {
+        rval = mbpc->get_sharing_data(*verts_it, ps, hs, pstat, num_ps); ERR;
+        if (num_ps == 0)
+            loc_verts++;
+        else if (num_ps == 1)                // when 2 procs, moab lists only one (the other)
+        {
+            loc_verts += 0.5;
+            loc_share_verts += 0.5;
+        }
+        else
+        {
+            loc_verts += (1.0 / (float)num_ps);
+            loc_share_verts += (1.0 / (float)num_ps);
+        }
+    }
+
+    range.clear();
+    rval = mbint->get_entities_by_dimension(*mesh_set, 3, range); ERR;
+    loc_cells = (int)range.size();
+
+    // add totals for global quantities
+    MPI_Reduce(&loc_verts, &glo_verts, 1, MPI_FLOAT, MPI_SUM, 0,
+            mbpc->comm());
+    MPI_Reduce(&loc_share_verts, &glo_share_verts, 1, MPI_FLOAT, MPI_SUM, 0,
+            mbpc->comm());
+    MPI_Reduce(&loc_cells, &glo_cells, 1, MPI_INT, MPI_SUM, 0, mbpc->comm());
+
+    // report results
+    if (rank == 0)
+    {
+        fmt::print(stderr, "----------------- Mesh {} statistics -----------------\n", mesh_num);
+        fmt::print(stderr, "Total number of verts = {} of which {} "
+                "are shared\n", glo_verts, glo_share_verts);
+        fmt::print(stderr, "Total number of cells = {}\n", glo_cells);
+        fmt::print(stderr, "------------------------------------------------------\n");
+    }
+
+    mesh_num = (mesh_num + 1) % 2;
+}
+
+// prepares the mesh by decomposing source domain and creating mesh in situ
+void PrepMesh(int src_type,
+              int src_size,
+              int slab,
+              Interface* mbi,
+              ParallelComm* pc,
+              EntityHandle root,
+              double factor,
+              bool debug)
+{
+    diy::RegularDecomposer<Bounds>::CoordinateVector    ghost(3, 0);
+    diy::RegularDecomposer<Bounds>::DivisionsVector     given(3, 0);
+    std::vector<bool>                                   share_face(3, true);
+    std::vector<bool>                                   wrap(3, false);
+
+    diy::mpi::communicator comm = pc->comm();
+
+    int src_mesh_size[3]  = {src_size, src_size, src_size};      // source size
+    Bounds domain(3);
+    domain.min[0] = domain.min[1] = domain.min[2] = 0;
+    domain.max[0] = domain.max[1] = domain.max[2] = src_size - 1;
+
+    // decompose domain
+    if (slab == 1)
+    {
+        // blocks are slabs in the z direction
+        given[1] = 1;
+    }
+
+    // the following calls to asssigners are for 1 block per process
+    diy::RoundRobinAssigner         assigner(comm.size(), comm.size());
+    diy::RegularDecomposer<Bounds>  decomposer(3,
+                                               domain,
+                                               assigner.nblocks(),
+                                               share_face,
+                                               wrap,
+                                               ghost,
+                                               given);
+
+    // report the number of blocks in each dimension of each mesh
+    if (comm.rank() == 0)
+        fmt::print(stderr, "Number of blocks in source = [{}]\n", fmt::join(decomposer.divisions, ","));
+
+    // create mesh in situ
+    if (debug)
+        pc->set_debug_verbosity(5);
+
+    if (src_type == 0)
+        hex_mesh_gen(src_mesh_size, mbi, &root, pc, decomposer, assigner);
+    else
+        tet_mesh_gen(src_mesh_size, mbi, &root, pc, decomposer, assigner);
+
+
+    // debug: print mesh stats
+    PrintMeshStats(mbi, &root, pc);
+
+    // add field to input mesh
+    PutVertexField(mbi, root, "vertex_field", factor);
+    PutElementField(mbi, root, "element_field", factor);
+}
+
 
