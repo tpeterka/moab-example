@@ -55,6 +55,17 @@ void producer_f (
 
 
     // debug
+    fmt::print(stderr, "*** producer generating moab mesh ***\n");
+
+    // create moab mesh
+    Interface *mbi = new Core();
+    ParallelComm* pcs = new ParallelComm(mbi, local);       // moab communicator TODO: necessary?
+    EntityHandle root;
+    mbi->create_meshset(MESHSET_SET, root);
+//     PrepMeshes(src_type, trgt_type, src_size, trgt_size, slab, mbi, pcs, roots, factor, times,
+//                decomps, assigners);
+
+    // debug
     fmt::print(stderr, "*** producer after closing file ***\n");
 
     if (!shared)
