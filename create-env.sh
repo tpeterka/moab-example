@@ -20,7 +20,7 @@ echo "activating spack environment"
 spack env activate $SPACKENV
 
 # add moab-example in develop mode
-spack develop moab-example@master
+spack develop moab-example@main
 spack add moab-example
 
 # install everything in environment

@@ -9,12 +9,11 @@ from spack import *
 class MoabExample(CMakePackage):
     """Example of Testing Moab with LowFive."""
 
-    # this is the actual public repo of the E3SM-Project (use this)
     homepage = "https://github.com/tpeterka/moab-example.git"
     url      = "https://github.com/tpeterka/moab-example.git"
-    git      = "https://github.com/tpeterka/moad-example.git"
+    git      = "https://github.com/tpeterka/moab-example.git"
 
-    version('master', branch='master')
+    version('main', branch='main')
 
     depends_on('mpich')
     depends_on('hdf5+mpi+hl@1.12.1 ^mpich', type='link')
@@ -24,5 +23,5 @@ class MoabExample(CMakePackage):
         args = ['-DCMAKE_C_COMPILER=%s' % self.spec['mpich'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpich'].mpicxx,
                 '-DBUILD_SHARED_LIBS=false',
-                '-DLOWFIVE_PATH=%s' % self.spec['lowfive'].prefix,
+                '-DLOWFIVE_PATH=%s' % self.spec['lowfive'].prefix]
         return args
