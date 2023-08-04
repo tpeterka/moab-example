@@ -34,12 +34,14 @@ spack env activate $SPACKENV
 # set build flags
 echo "setting flags for building moab-example"
 export LOWFIVE_PATH=`spack location -i lowfive`
+export MOAB_PATH=`spack location -i moab`
 export MOAB_EXAMPLE_PATH=`spack location -i moab-example`
 export HENSON_PATH=`spack location -i henson`
 
 # set LD_LIBRARY_PATH
 echo "setting flags for running moab-example"
 export LD_LIBRARY_PATH=$LOWFIVE_PATH/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$MOAB_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HENSON_PATH/lib:$LD_LIBRARY_PATH
 
 export HDF5_PLUGIN_PATH=$LOWFIVE_PATH/lib
