@@ -5,7 +5,7 @@ foreach                     (t ${targets})
   target_link_libraries     (${t} ${libraries})
 endforeach                  ()
 
-add_library                 (producer SHARED producer.cpp)
+add_library                 (producer SHARED producer.cpp mesh_gen.cpp)
 target_link_libraries       (producer ${libraries})
 set_target_properties       (producer PROPERTIES PREFIX "")
 set_target_properties       (producer PROPERTIES SUFFIX ".so")

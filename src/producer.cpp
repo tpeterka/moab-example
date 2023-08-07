@@ -1,10 +1,9 @@
-#include <diy/mpi/communicator.hpp>
 #include "prod-con.hpp"
 
 herr_t fail_on_hdf5_error(hid_t stack_id, void*)
 {
     H5Eprint(stack_id, stderr);
-    fprintf(stderr, "An HDF5 error was detected. Terminating.\n");
+    fmt::print(stderr, "An HDF5 error was detected. Terminating.\n");
     exit(1);
 }
 
@@ -25,9 +24,12 @@ void producer_f (
         int passthru)
 {
     diy::mpi::communicator local_(local);
+    std::string outfile     = "example1.h5m";
+    std::string write_opts  = "PARALLEL=WRITE_PART";
 
     // debug
-    fmt::print(stderr, "producer: local comm rank {} size {}\n", local_.rank(), local_.size());
+    fmt::print(stderr, "producer: local comm rank {} size {} metadata {} passthru {}\n",
+            local_.rank(), local_.size(), metadata, passthru);
 
     // VOL plugin and properties
     hid_t plist;
@@ -48,9 +50,19 @@ void producer_f (
 
         // set lowfive properties
         if (passthru)
-            vol_plugin.set_passthru("example1.h5", "*");
+        {
+            // debug
+            fmt::print(stderr, "*** producer setting passthru mode\n");
+
+            vol_plugin.set_passthru(outfile, "*");
+        }
         if (metadata)
-            vol_plugin.set_memory("example1.h5", "*");
+        {
+            // debug
+            fmt::print(stderr, "*** producer setting memory mode\n");
+
+            vol_plugin.set_memory(outfile, "*");
+        }
     }
 
 
@@ -58,15 +70,22 @@ void producer_f (
     fmt::print(stderr, "*** producer generating moab mesh ***\n");
 
     // create moab mesh
-    Interface *mbi = new Core();
-    ParallelComm* pcs = new ParallelComm(mbi, local);       // moab communicator TODO: necessary?
-    EntityHandle root;
-    mbi->create_meshset(MESHSET_SET, root);
-//     PrepMeshes(src_type, trgt_type, src_size, trgt_size, slab, mbi, pcs, roots, factor, times,
-//                decomps, assigners);
+    int                             mesh_type = 1;                          // source mesh type (0 = hex, 1 = tet)
+    int                             mesh_size = 100;                        // source mesh size per side
+    int                             mesh_slab = 0;                          // block shape (0 = cubes; 1 = slabs)
+    double                          factor = 1.0;                           // scaling factor on field values
+    Interface*                      mbi = new Core();                       // moab interface
+    ParallelComm*                   pc  = new ParallelComm(mbi, local);     // moab communicator
+    EntityHandle                    root;
+    ErrorCode                       rval;
+    rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
+    PrepMesh(mesh_type, mesh_size, mesh_slab, mbi, pc, root, factor, false);
+
+    // write file
+    rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
 
     // debug
-    fmt::print(stderr, "*** producer after closing file ***\n");
+    fmt::print(stderr, "*** producer after writing file ***\n");
 
     if (!shared)
         H5Pclose(plist);
