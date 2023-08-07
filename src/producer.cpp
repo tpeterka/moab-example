@@ -24,9 +24,12 @@ void producer_f (
         int passthru)
 {
     diy::mpi::communicator local_(local);
+    std::string outfile     = "example1.h5m";
+    std::string write_opts  = "PARALLEL=WRITE_PART";
 
     // debug
-    fmt::print(stderr, "producer: local comm rank {} size {}\n", local_.rank(), local_.size());
+    fmt::print(stderr, "producer: local comm rank {} size {} metadata {} passthru {}\n",
+            local_.rank(), local_.size(), metadata, passthru);
 
     // VOL plugin and properties
     hid_t plist;
@@ -47,9 +50,19 @@ void producer_f (
 
         // set lowfive properties
         if (passthru)
-            vol_plugin.set_passthru("example1.h5", "*");
+        {
+            // debug
+            fmt::print(stderr, "*** producer setting passthru mode\n");
+
+            vol_plugin.set_passthru(outfile, "*");
+        }
         if (metadata)
-            vol_plugin.set_memory("example1.h5", "*");
+        {
+            // debug
+            fmt::print(stderr, "*** producer setting memory mode\n");
+
+            vol_plugin.set_memory(outfile, "*");
+        }
     }
 
 
@@ -69,8 +82,6 @@ void producer_f (
     PrepMesh(mesh_type, mesh_size, mesh_slab, mbi, pc, root, factor, false);
 
     // write file
-    std::string outfile     = "example1.h5m";
-    std::string write_opts  = "PARALLEL=WRITE_PART";
     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
 
     // debug

@@ -24,7 +24,8 @@ void consumer_f (
     std::string read_opts   = "PARALLEL=READ_PART;PARTITION_METHOD=SQIJ;PARALLEL_RESOLVE_SHARED_ENTS";
 
     // debug
-    fmt::print(stderr, "consumer: local comm rank {} size {}\n", local_.rank(), local_.size());
+    fmt::print(stderr, "consumer: local comm rank {} size {} metadata {} passthru {}\n",
+            local_.rank(), local_.size(), metadata, passthru);
 
     // wait for data to be ready
     if (passthru && !metadata && !shared)
@@ -52,9 +53,19 @@ void consumer_f (
 
         // set lowfive properties
         if (passthru)
+        {
+            // debug
+            fmt::print(stderr, "*** consumer setting passthru mode\n");
+
             vol_plugin.set_passthru(infile, "*");
+        }
         if (metadata)
+        {
+            // debug
+            fmt::print(stderr, "*** consumer setting memory mode\n");
+
             vol_plugin.set_memory(infile, "*");
+        }
         vol_plugin.set_intercomm(infile, "*", 0);
     }
 
