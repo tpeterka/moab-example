@@ -19,6 +19,10 @@ spack env create $SPACKENV $YAML
 echo "activating spack environment"
 spack env activate $SPACKENV
 
+# add lowfive in develop mode
+spack develop lowfive@master
+spack add lowfive
+
 # add moab-example in develop mode
 spack develop moab-example@main
 spack add moab-example
