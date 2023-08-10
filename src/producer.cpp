@@ -38,32 +38,32 @@ void producer_f (
         fmt::print(stderr, "producer: using shared mode MetadataVOL plugin created by prod-con\n");
     else                        // normal multiprocess, DistMetadataVOL plugin
     {
-        l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
+//         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
 
-        l5::H5VOLProperty vol_prop(vol_plugin);
-        if (!getenv("HDF5_VOL_CONNECTOR"))
-            vol_prop.apply(plist);
-
-        // set lowfive properties
-        if (passthru)
-        {
-            // debug
-            fmt::print(stderr, "*** producer setting passthru mode\n");
-
-            vol_plugin.set_passthru(outfile, "*");
-        }
-        if (metadata)
-        {
-            // debug
-            fmt::print(stderr, "*** producer setting memory mode\n");
-
-            vol_plugin.set_memory(outfile, "*");
-        }
-        vol_plugin.set_keep(true);
+//         l5::H5VOLProperty vol_prop(vol_plugin);
+//         if (!getenv("HDF5_VOL_CONNECTOR"))
+//             vol_prop.apply(plist);
+// 
+//         // set lowfive properties
+//         if (passthru)
+//         {
+//             // debug
+//             fmt::print(stderr, "*** producer setting passthru mode\n");
+// 
+//             vol_plugin.set_passthru(outfile, "*");
+//         }
+//         if (metadata)
+//         {
+//             // debug
+//             fmt::print(stderr, "*** producer setting memory mode\n");
+// 
+//             vol_plugin.set_memory(outfile, "*");
+//         }
+//         vol_plugin.set_keep(true);
     }
 
 

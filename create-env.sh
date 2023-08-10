@@ -44,6 +44,7 @@ export LD_LIBRARY_PATH=$LOWFIVE_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$MOAB_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HENSON_PATH/lib:$LD_LIBRARY_PATH
 
-export HDF5_PLUGIN_PATH=$LOWFIVE_PATH/lib
-export HDF5_VOL_CONNECTOR="lowfive under_vol=0;under_info={};"
+# don't enable lowfive for no-lowfive branch
+# export HDF5_PLUGIN_PATH=$LOWFIVE_PATH/lib
+# export HDF5_VOL_CONNECTOR="lowfive under_vol=0;under_info={};"
 

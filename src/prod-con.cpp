@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     int                       metadata          = 1;              // build in-memory metadata
     int                       passthru          = 0;              // write file to disk
     bool                      shared            = false;          // producer and consumer run on the same ranks
-    float                     prod_frac         = 1.0 / 2.0;      // fraction of world ranks in producer
+    float                     prod_frac         = 1.0 / 3.0;      // fraction of world ranks in producer
     std::string               producer_exec     = "./producer.so";    // name of producer executable
     std::string               consumer_exec     = "./consumer.so";    // name of consumer executable
     int                       ntrials           = 1;              // number of trials to run
@@ -122,23 +122,23 @@ int main(int argc, char* argv[])
     hid_t plist;
     if (shared)
     {
-        l5::MetadataVOL& shared_vol_plugin = l5::MetadataVOL::create_MetadataVOL();
-        fmt::print(stderr, "prod-con: creating new shared mode MetadataVOL plugin\n");
+//         l5::MetadataVOL& shared_vol_plugin = l5::MetadataVOL::create_MetadataVOL();
+//         fmt::print(stderr, "prod-con: creating new shared mode MetadataVOL plugin\n");
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, world, MPI_INFO_NULL);
 
-        l5::H5VOLProperty vol_prop(shared_vol_plugin);
-        if (!getenv("HDF5_VOL_CONNECTOR"))
-            vol_prop.apply(plist);
-
-        // set lowfive properties
-        if (passthru)
-            shared_vol_plugin.set_passthru(filename, "*");
-        if (metadata)
-            shared_vol_plugin.set_memory(filename, "*");
-        shared_vol_plugin.set_keep(true);
+//         l5::H5VOLProperty vol_prop(shared_vol_plugin);
+//         if (!getenv("HDF5_VOL_CONNECTOR"))
+//             vol_prop.apply(plist);
+// 
+//         // set lowfive properties
+//         if (passthru)
+//             shared_vol_plugin.set_passthru(filename, "*");
+//         if (metadata)
+//             shared_vol_plugin.set_memory(filename, "*");
+//         shared_vol_plugin.set_keep(true);
     }
 
     // declare lambdas for the tasks

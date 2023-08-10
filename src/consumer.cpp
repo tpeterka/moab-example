@@ -20,8 +20,8 @@ void consumer_f (
         int passthru)
 {
     diy::mpi::communicator local_(local);
-    std::string infile      = "example1.h5m";
-    std::string read_opts   = "PARALLEL=READ_PART;PARTITION_METHOD=SQIJ;PARALLEL_RESOLVE_SHARED_ENTS";
+    std::string infile      = "example1_2parts.h5m";
+    std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS";
 
     // debug
     fmt::print(stderr, "consumer: local comm rank {} size {} metadata {} passthru {}\n",
@@ -41,32 +41,32 @@ void consumer_f (
         fmt::print(stderr, "consumer: using shared mode MetadataVOL plugin created by prod-con\n");
     else                            // normal multiprocess, DistMetadataVOL plugin
     {
-        l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
+//         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
 
-        l5::H5VOLProperty vol_prop(vol_plugin);
-        if (!getenv("HDF5_VOL_CONNECTOR"))
-            vol_prop.apply(plist);
-
-        // set lowfive properties
-        if (passthru)
-        {
-            // debug
-            fmt::print(stderr, "*** consumer setting passthru mode\n");
-
-            vol_plugin.set_passthru(infile, "*");
-        }
-        if (metadata)
-        {
-            // debug
-            fmt::print(stderr, "*** consumer setting memory mode\n");
-
-            vol_plugin.set_memory(infile, "*");
-        }
-        vol_plugin.set_intercomm(infile, "*", 0);
+//         l5::H5VOLProperty vol_prop(vol_plugin);
+//         if (!getenv("HDF5_VOL_CONNECTOR"))
+//             vol_prop.apply(plist);
+// 
+//         // set lowfive properties
+//         if (passthru)
+//         {
+//             // debug
+//             fmt::print(stderr, "*** consumer setting passthru mode\n");
+// 
+//             vol_plugin.set_passthru(infile, "*");
+//         }
+//         if (metadata)
+//         {
+//             // debug
+//             fmt::print(stderr, "*** consumer setting memory mode\n");
+// 
+//             vol_plugin.set_memory(infile, "*");
+//         }
+//         vol_plugin.set_intercomm(infile, "*", 0);
     }
 
     // initialize moab
