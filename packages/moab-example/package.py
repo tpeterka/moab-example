@@ -18,6 +18,7 @@ class MoabExample(CMakePackage):
 
     depends_on('mpich')
     depends_on('hdf5+mpi+hl', type='link')
+    depends_on('moab', type='link')
 #     depends_on('lowfive', type='link')
 
     def cmake_args(self):
