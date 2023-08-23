@@ -13,15 +13,16 @@ class MoabExample(CMakePackage):
     url      = "https://github.com/tpeterka/moab-example.git"
     git      = "https://github.com/tpeterka/moab-example.git"
 
-    version('main', branch='main')
+#     version('main', branch='main')
+    version('hdf5-1.14', branch='hdf5-1.14')
 
     depends_on('mpich')
-    depends_on('hdf5+mpi+hl@1.12.1 ^mpich', type='link')
-    depends_on('lowfive', type='link')
+    depends_on('hdf5+mpi+hl', type='link')
+#     depends_on('lowfive', type='link')
 
     def cmake_args(self):
         args = ['-DCMAKE_C_COMPILER=%s' % self.spec['mpich'].mpicc,
                 '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpich'].mpicxx,
-                '-DBUILD_SHARED_LIBS=false',
-                '-DLOWFIVE_PATH=%s' % self.spec['lowfive'].prefix]
+                '-DBUILD_SHARED_LIBS=false']
+#                 '-DLOWFIVE_PATH=%s' % self.spec['lowfive'].prefix]
         return args

@@ -35,14 +35,30 @@ void producer_f (
     hid_t plist;
 
     if (shared)                 // single process, MetadataVOL test
+    {
+
+#ifdef      LOWFIVE_PATH
+
         fmt::print(stderr, "producer: using shared mode MetadataVOL plugin created by prod-con\n");
+
+#endif
+
+    }
     else                        // normal multiprocess, DistMetadataVOL plugin
     {
+
+#ifdef      LOWFIVE_PATH
+
         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
+
+#endif
+
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
+
+#ifdef      LOWFIVE_PATH
 
         l5::H5VOLProperty vol_prop(vol_plugin);
         if (!getenv("HDF5_VOL_CONNECTOR"))
@@ -63,11 +79,17 @@ void producer_f (
 
             vol_plugin.set_memory(outfile, "*");
         }
+
+#endif
+
     }
 
 
     // debug
     fmt::print(stderr, "*** producer generating moab mesh ***\n");
+
+    // set HDF5 error handler
+    H5Eset_auto(H5E_DEFAULT, fail_on_hdf5_error, NULL);
 
     // create moab mesh
     int                             mesh_type = 1;                          // source mesh type (0 = hex, 1 = tet)
