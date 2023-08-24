@@ -122,23 +122,23 @@ int main(int argc, char* argv[])
     hid_t plist;
     if (shared)
     {
-//         l5::MetadataVOL& shared_vol_plugin = l5::MetadataVOL::create_MetadataVOL();
-//         fmt::print(stderr, "prod-con: creating new shared mode MetadataVOL plugin\n");
+        l5::MetadataVOL& shared_vol_plugin = l5::MetadataVOL::create_MetadataVOL();
+        fmt::print(stderr, "prod-con: creating new shared mode MetadataVOL plugin\n");
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, world, MPI_INFO_NULL);
 
-//         l5::H5VOLProperty vol_prop(shared_vol_plugin);
-//         if (!getenv("HDF5_VOL_CONNECTOR"))
-//             vol_prop.apply(plist);
-// 
-//         // set lowfive properties
-//         if (passthru)
-//             shared_vol_plugin.set_passthru(filename, "*");
-//         if (metadata)
-//             shared_vol_plugin.set_memory(filename, "*");
-//         shared_vol_plugin.set_keep(true);
+        l5::H5VOLProperty vol_prop(shared_vol_plugin);
+        if (!getenv("HDF5_VOL_CONNECTOR"))
+            vol_prop.apply(plist);
+
+        // set lowfive properties
+        if (passthru)
+            shared_vol_plugin.set_passthru(filename, "*");
+        if (metadata)
+            shared_vol_plugin.set_memory(filename, "*");
+        shared_vol_plugin.set_keep(true);
     }
 
     // declare lambdas for the tasks
@@ -184,9 +184,15 @@ int main(int argc, char* argv[])
         if (!shared)
         {
             if (producer)
+            {
+                fmt::print(stderr, "Calling producer now.\n");
                 producer_f();
+            }
             else
+            {
+                fmt::print(stderr, "Calling consumer now.\n");
                 consumer_f();
+            }
         } else
         {
             // not multithreading, just serializing

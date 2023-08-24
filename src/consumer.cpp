@@ -20,8 +20,8 @@ void consumer_f (
         int passthru)
 {
     diy::mpi::communicator local_(local);
-    std::string infile      = "example1_2parts.h5m";
-    std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS";
+    std::string infile      = "example1.h5m";
+    std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS;DEBUG_IO=6;";
 
     // debug
     fmt::print(stderr, "consumer: local comm rank {} size {} metadata {} passthru {}\n",
@@ -33,6 +33,7 @@ void consumer_f (
         for (auto& intercomm: intercomms)
             diy_comm(intercomm).barrier();
     }
+    fmt::print(stderr, "*** consumer after barrier completed! ***\n");
 
     // VOL plugin and properties
     hid_t plist;
@@ -41,36 +42,37 @@ void consumer_f (
         fmt::print(stderr, "consumer: using shared mode MetadataVOL plugin created by prod-con\n");
     else                            // normal multiprocess, DistMetadataVOL plugin
     {
-//         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
+        l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
 
-//         l5::H5VOLProperty vol_prop(vol_plugin);
-//         if (!getenv("HDF5_VOL_CONNECTOR"))
-//             vol_prop.apply(plist);
-// 
-//         // set lowfive properties
-//         if (passthru)
-//         {
-//             // debug
-//             fmt::print(stderr, "*** consumer setting passthru mode\n");
-// 
-//             vol_plugin.set_passthru(infile, "*");
-//         }
-//         if (metadata)
-//         {
-//             // debug
-//             fmt::print(stderr, "*** consumer setting memory mode\n");
-// 
-//             vol_plugin.set_memory(infile, "*");
-//         }
-//         vol_plugin.set_intercomm(infile, "*", 0);
+        l5::H5VOLProperty vol_prop(vol_plugin);
+        if (!getenv("HDF5_VOL_CONNECTOR"))
+            vol_prop.apply(plist);
+
+        // set lowfive properties
+        if (passthru)
+        {
+            // debug
+            fmt::print(stderr, "*** consumer setting passthru mode\n");
+
+            vol_plugin.set_passthru(infile, "*");
+        }
+        if (metadata)
+        {
+            // debug
+            fmt::print(stderr, "*** consumer setting memory mode\n");
+
+            vol_plugin.set_memory(infile, "*");
+        }
+        vol_plugin.set_intercomm(infile, "*", 0);
     }
 
     // initialize moab
     Interface*                      mbi = new Core();                       // moab interface
+    ParallelComm*                   pc  = new ParallelComm(mbi, local);     // moab communicator
     EntityHandle                    root;
     ErrorCode                       rval;
     rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
@@ -87,5 +89,12 @@ void consumer_f (
 
     // debug
     fmt::print(stderr, "*** consumer after closing file ***\n");
+
+    // write file
+    std::string outfile     = "example1_cons.h5m";
+    std::string write_opts  = "PARALLEL=WRITE_PART";
+    rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
+    fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
+
 }
 
