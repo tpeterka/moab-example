@@ -13,8 +13,8 @@ class MoabExample(CMakePackage):
     url      = "https://github.com/tpeterka/moab-example.git"
     git      = "https://github.com/tpeterka/moab-example.git"
 
-#     version('main', branch='main')
-    version('no-lowfive', branch='no-lowfive')
+    version('main', branch='main')
+#     version('no-lowfive', branch='no-lowfive')
 
     depends_on('mpich')
     depends_on('hdf5+mpi+hl', type='link')

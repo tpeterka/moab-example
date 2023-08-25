@@ -13,7 +13,8 @@ class Lowfive(CMakePackage):
     homepage = "https://github.com/diatomic/LowFive.git"
     url      = "https://github.com/diatomic/LowFive.git"
     git      = "https://github.com/diatomic/LowFive.git"
-    version('master', branch='master')
+#     version('master', branch='master')
+    version('datatypes', branch='datatypes')
 
     variant("examples", default=False, description="Install the examples")
     variant("auto_load", default=True, description="Set LowFive environment variables")
