@@ -63,6 +63,7 @@ void producer_f (
 
             vol_plugin.set_memory(outfile, "*");
         }
+        vol_plugin.set_keep(true);
     }
 
 
