@@ -24,7 +24,7 @@ spack develop lowfive@master
 spack add lowfive
 
 # add moab-example in develop mode
-spack develop moab-example@main
+spack develop moab-example@no-lowfive
 spack add moab-example
 
 # install everything in environment
@@ -37,17 +37,18 @@ spack env activate $SPACKENV
 
 # set build flags
 echo "setting flags for building moab-example"
-export LOWFIVE_PATH=`spack location -i lowfive`
+# export LOWFIVE_PATH=`spack location -i lowfive`
 export MOAB_PATH=`spack location -i moab`
 export MOAB_EXAMPLE_PATH=`spack location -i moab-example`
 export HENSON_PATH=`spack location -i henson`
 
 # set LD_LIBRARY_PATH
 echo "setting flags for running moab-example"
-export LD_LIBRARY_PATH=$LOWFIVE_PATH/lib:$LD_LIBRARY_PATH
+# export LD_LIBRARY_PATH=$LOWFIVE_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$MOAB_PATH/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$HENSON_PATH/lib:$LD_LIBRARY_PATH
 
-export HDF5_PLUGIN_PATH=$LOWFIVE_PATH/lib
-export HDF5_VOL_CONNECTOR="lowfive under_vol=0;under_info={};"
+# don't enable lowfive for no-lowfive branch
+# export HDF5_PLUGIN_PATH=$LOWFIVE_PATH/lib
+# export HDF5_VOL_CONNECTOR="lowfive under_vol=0;under_info={};"
 
