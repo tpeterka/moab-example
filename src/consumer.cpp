@@ -39,14 +39,30 @@ void consumer_f (
     hid_t plist;
 
     if (shared)                     // single process, MetadataVOL test
+    {
+
+#ifdef LOWFIVE_PATH
+
         fmt::print(stderr, "consumer: using shared mode MetadataVOL plugin created by prod-con\n");
+
+#endif
+
+    }
     else                            // normal multiprocess, DistMetadataVOL plugin
     {
+
+#ifdef LOWFIVE_PATH
+
         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
+
+#endif
+
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
+
+#ifdef LOWFIVE_PATH
 
         l5::H5VOLProperty vol_prop(vol_plugin);
         if (!getenv("HDF5_VOL_CONNECTOR"))
@@ -68,6 +84,9 @@ void consumer_f (
             vol_plugin.set_memory(infile, "*");
         }
         vol_plugin.set_intercomm(infile, "*", 0);
+
+#endif
+
     }
 
     // initialize moab

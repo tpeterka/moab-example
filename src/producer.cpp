@@ -35,14 +35,30 @@ void producer_f (
     hid_t plist;
 
     if (shared)                 // single process, MetadataVOL test
+    {
+
+#ifdef LOWFIVE_PATH
+
         fmt::print(stderr, "producer: using shared mode MetadataVOL plugin created by prod-con\n");
+
+#endif
+
+    }
     else                        // normal multiprocess, DistMetadataVOL plugin
     {
+
+#ifdef LOWFIVE_PATH
+
         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
+
+#endif
+
         plist = H5Pcreate(H5P_FILE_ACCESS);
 
         if (passthru)
             H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
+
+#ifdef LOWFIVE_PATH
 
         l5::H5VOLProperty vol_prop(vol_plugin);
         if (!getenv("HDF5_VOL_CONNECTOR"))
@@ -64,6 +80,9 @@ void producer_f (
             vol_plugin.set_memory(outfile, "*");
         }
         vol_plugin.set_keep(true);
+
+#endif
+
     }
 
 
