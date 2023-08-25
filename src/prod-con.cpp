@@ -50,11 +50,16 @@ int main(int argc, char* argv[])
         }
         return 1;
     }
+    std::string filename    = "example1.h5m";
+
+#ifdef LOWFIVE_PATH
 
 #ifdef      LOWFIVE_PATH
 
     // lowfive logging
     l5::create_logger("trace");
+
+#endif
 
 #endif
 
@@ -144,9 +149,9 @@ int main(int argc, char* argv[])
 
         // set lowfive properties
         if (passthru)
-            shared_vol_plugin.set_passthru("example1.nc", "*");
+            shared_vol_plugin.set_passthru(filename, "*");
         if (metadata)
-            shared_vol_plugin.set_memory("example1.nc", "*");
+            shared_vol_plugin.set_memory(filename, "*");
         shared_vol_plugin.set_keep(true);
 
 #endif
@@ -196,9 +201,15 @@ int main(int argc, char* argv[])
         if (!shared)
         {
             if (producer)
+            {
+                fmt::print(stderr, "Calling producer now.\n");
                 producer_f();
+            }
             else
+            {
+                fmt::print(stderr, "Calling consumer now.\n");
                 consumer_f();
+            }
         } else
         {
             // not multithreading, just serializing

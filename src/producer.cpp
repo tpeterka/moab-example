@@ -79,6 +79,7 @@ void producer_f (
 
             vol_plugin.set_memory(outfile, "*");
         }
+        vol_plugin.set_keep(true);
 
 #endif
 
@@ -92,8 +93,8 @@ void producer_f (
     H5Eset_auto(H5E_DEFAULT, fail_on_hdf5_error, NULL);
 
     // create moab mesh
-    int                             mesh_type = 1;                          // source mesh type (0 = hex, 1 = tet)
-    int                             mesh_size = 100;                        // source mesh size per side
+    int                             mesh_type = 0;                          // source mesh type (0 = hex, 1 = tet)
+    int                             mesh_size = 10;                        // source mesh size per side
     int                             mesh_slab = 0;                          // block shape (0 = cubes; 1 = slabs)
     double                          factor = 1.0;                           // scaling factor on field values
     Interface*                      mbi = new Core();                       // moab interface
@@ -118,4 +119,5 @@ void producer_f (
         for (auto& intercomm: intercomms)
             diy_comm(intercomm).barrier();
     }
+    fmt::print(stderr, "*** producer after barrier completed! ***\n");
 }

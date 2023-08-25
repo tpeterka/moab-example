@@ -191,6 +191,23 @@ void create_hexes_and_verts(int *mesh_size,     // mesh size (i,j,k) number of v
         }
     }
 
+    // Create a part set to add entities in the current block
+    // Technically we could have an array of these to represent multiple
+    // blocks in the current process - but we will simplify this assumption
+    EntityHandle partset;
+    rval = mbint->create_meshset(MESHSET_SET, partset); ERR;
+    rval = mbint->add_entities(partset, cRange); ERR;
+
+    Tag parttag;
+    int dumid=-1, proc_id=mbpc->rank();
+    rval = mbint->tag_get_handle("PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, parttag, MB_TAG_CREAT | MB_TAG_SPARSE, &dumid); ERR;
+    rval = mbint->tag_set_data(parttag, &partset, 1, &proc_id); ERR;
+    rval = mbint->add_entities(*mesh_set, &partset, 1); ERR;
+
+    Range psets;
+    psets.insert(partset);
+    mbpc->partition_sets() = psets;
+
     // update adjacencies (needed by moab)
     rval = iface->update_adjacencies(startc, num_hexes, 8, starth); ERR;
 
@@ -396,6 +413,23 @@ void create_tets_and_verts(int *mesh_size,      // mesh size (i,j,k) number of v
 
     // update adjacencies (needed by moab)
     rval = iface->update_adjacencies(startc, num_tets, 4, starth); ERR;
+
+    // Create a part set to add entities in the current block
+    // Technically we could have an array of these to represent multiple
+    // blocks in the current process - but we will simplify this assumption
+    EntityHandle partset;
+    rval = mbint->create_meshset(MESHSET_SET, partset); ERR;
+    rval = mbint->add_entities(partset, cRange); ERR;
+
+    Tag parttag;
+    int dumid=-1, proc_id=mbpc->rank();
+    rval = mbint->tag_get_handle("PARALLEL_PARTITION", 1, MB_TYPE_INTEGER, parttag, MB_TAG_CREAT | MB_TAG_SPARSE, &dumid); ERR;
+    rval = mbint->tag_set_data(parttag, &partset, 1, &proc_id); ERR;
+    rval = mbint->add_entities(*mesh_set, &partset, 1); ERR;
+
+    Range psets;
+    psets.insert(partset);
+    mbpc->partition_sets() = psets;
 
     // cleanup
     rval = mbint->release_interface(iface); ERR;

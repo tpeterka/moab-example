@@ -34,17 +34,17 @@ memory mode
 cd $MOAB_EXAMPLE_PATH/bin
 mpiexec -n 1 ./prod-con
 ```
-### Distributed mode: two MPI ranks, 1 rank producer + 1 rank consumer
+### Distributed mode: 4 MPI ranks, 2 rank producer + 2 rank consumer
 
 passthru mode
 ```
 cd $MOAB_EXAMPLE_PATH/bin
-mpiexec -n 2 ./prod-con -m 0 -f 1
+mpiexec -n 4 ./prod-con -m 0 -f 1
 ```
 memory mode
 ```
 cd $MOAB_EXAMPLE_PATH/bin
-mpiexec -n 2 ./prod-con
+mpiexec -n 4 ./prod-con
 ```
 
 
