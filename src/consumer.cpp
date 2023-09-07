@@ -100,21 +100,20 @@ void consumer_f (
     rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
 
     // debug
-    fmt::print(stderr, "*** consumer before opening file ***\n");
+    fmt::print(stderr, "*** consumer before reading file ***\n");
 
     // read file
     rval = mbi->load_file(infile.c_str(), &root, read_opts.c_str() ); ERR(rval);
 
-    // clean up
-    if (!shared)
-        H5Pclose(plist);
-
     // debug
-    fmt::print(stderr, "*** consumer after closing file ***\n");
+    fmt::print(stderr, "*** consumer after reading file ***\n");
 
     // write file for debugging
     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
     fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
 
+    // clean up
+    if (!shared)
+        H5Pclose(plist);
 }
 
