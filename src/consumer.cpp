@@ -22,6 +22,8 @@ void consumer_f (
     diy::mpi::communicator local_(local);
     std::string infile      = "example1.h5m";
     std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS;DEBUG_IO=6;";
+    std::string outfile     = "example1_cons.h5m";      // for debugging
+    std::string write_opts  = "PARALLEL=WRITE_PART";
 
     // debug
     fmt::print(stderr, "consumer: local comm rank {} size {} metadata {} passthru {}\n",
@@ -83,6 +85,7 @@ void consumer_f (
 
             vol_plugin.set_memory(infile, "*");
         }
+        vol_plugin.set_passthru(outfile, "*");      // outfile for debugging goes to disk
         vol_plugin.set_intercomm(infile, "*", 0);
 
 #endif
@@ -109,9 +112,7 @@ void consumer_f (
     // debug
     fmt::print(stderr, "*** consumer after closing file ***\n");
 
-    // write file
-    std::string outfile     = "example1_cons.h5m";
-    std::string write_opts  = "PARALLEL=WRITE_PART";
+    // write file for debugging
     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
     fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
 
