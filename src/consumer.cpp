@@ -88,6 +88,7 @@ void consumer_f (
         vol_plugin.set_passthru(outfile, "*");      // outfile for debugging goes to disk
         vol_plugin.set_intercomm(infile, "*", 0);
 
+        vol_plugin.set_keep(true);
 #endif
 
     }
