@@ -25,7 +25,7 @@ void producer_f (
 {
     diy::mpi::communicator local_(local);
     std::string outfile     = "example1.h5m";
-    std::string write_opts  = "PARALLEL=WRITE_PART";
+    std::string write_opts  = "PARALLEL=WRITE_PART;DEBUG_IO=6";
 
     // debug
     fmt::print(stderr, "producer: local comm rank {} size {} metadata {} passthru {}\n",
@@ -80,6 +80,23 @@ void producer_f (
             vol_plugin.set_memory(outfile, "*");
         }
         vol_plugin.set_keep(true);
+
+        // set a callback to broadcast files from root to other ranks on first time file close
+        bool first_close = true;
+        vol_plugin.set_after_file_close([&]()
+        {
+            fmt::print(stderr, "--- Entering after file close callback ---\n");
+            if (first_close)
+            {
+                fmt::print(stderr, "--- first closing, broadcast files ---\n");
+                vol_plugin.broadcast_files();
+                first_close = false;
+            }
+            else
+                fmt::print(stderr, "--- subsequent closing, do nothing ---\n");
+
+            fmt::print(stderr, "--- Leaving after file close callback ---\n");
+        });
 
 #endif
 
