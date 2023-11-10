@@ -21,7 +21,7 @@ void consumer_f (
 {
     diy::mpi::communicator local_(local);
     std::string infile      = "example1.h5m";
-    std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS;DEBUG_IO=6;";
+    std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS;DEBUG_IO=3;";
     std::string outfile     = "example1_cons.h5m";      // for debugging
     std::string write_opts  = "PARALLEL=WRITE_PART;DEBUG_IO=6";
 

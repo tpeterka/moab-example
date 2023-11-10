@@ -19,8 +19,16 @@ spack env create $SPACKENV $YAML
 echo "activating spack environment"
 spack env activate $SPACKENV
 
+# add moab in develop mode
+spack develop moab@5.3.0~cgm~coupler~dagmc+debug~fbigeom~fortran+hdf5~irel~metis+mpi~netcdf~parmetis~pnetcdf+shared+zoltan build_system=autotools
+spack add moab
+
+# add lowfive in develop mode
+spack develop lowfive@datatypes build_type=Debug
+spack add lowfive
+
 # add moab-example in develop mode
-spack develop moab-example@main
+spack develop moab-example@main build_type=Debug
 spack add moab-example
 
 # install everything in environment
