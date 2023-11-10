@@ -85,17 +85,40 @@ void producer_f (
         bool first_close = true;
         vol_plugin.set_after_file_close([&]()
         {
-            fmt::print(stderr, "--- Entering after file close callback ---\n");
-            if (first_close)
+            if (local_.rank() == 0)
             {
-                fmt::print(stderr, "--- first closing, broadcast files ---\n");
-                vol_plugin.broadcast_files();
-                first_close = false;
-            }
-            else
-                fmt::print(stderr, "--- subsequent closing, do nothing ---\n");
+                fmt::print(stderr, "--- Entering after file close callback ---\n");
+                if (first_close)
+                {
+                    fmt::print(stderr, "--- first closing, broadcast files ---\n");
+                    vol_plugin.broadcast_files();
+                    first_close = false;
+                }
+                else
+                    fmt::print(stderr, "--- subsequent closing, do nothing ---\n");
 
-            fmt::print(stderr, "--- Leaving after file close callback ---\n");
+                fmt::print(stderr, "--- Leaving after file close callback ---\n");
+            }
+        });
+
+        // set a callback to receive broadcasted files by other ranks before a file open
+        bool first_open = true;     // non-root producers should only open the file once, but check anyway
+        vol_plugin.set_before_file_open([&]()
+        {
+            if (local_.rank() > 0)
+            {
+                fmt::print(stderr, "--- Entering before file open callback ---\n");
+                if (first_open)
+                {
+                    fmt::print(stderr, "--- first opening, receive broadcasted files ---\n");
+                    vol_plugin.broadcast_files();
+                    first_open = false;
+                }
+                else
+                    fmt::print(stderr, "--- subsequent opening, do nothing ---\n");
+
+                fmt::print(stderr, "--- Leaving before file open callback ---\n");
+            }
         });
 
 #endif
