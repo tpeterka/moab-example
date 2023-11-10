@@ -81,44 +81,32 @@ void producer_f (
         }
         vol_plugin.set_keep(true);
 
-        // set a callback to broadcast files from root to other ranks on first time file close
-        bool first_close = true;
-        vol_plugin.set_after_file_close([&]()
-        {
-            if (local_.rank() == 0)
-            {
-                fmt::print(stderr, "--- Entering after file close callback ---\n");
-                if (first_close)
-                {
-                    fmt::print(stderr, "--- first closing, broadcast files ---\n");
-                    vol_plugin.broadcast_files();
-                    first_close = false;
-                }
-                else
-                    fmt::print(stderr, "--- subsequent closing, do nothing ---\n");
-
-                fmt::print(stderr, "--- Leaving after file close callback ---\n");
-            }
-        });
-
-        // set a callback to receive broadcasted files by other ranks before a file open
-        bool first_open = true;     // non-root producers should only open the file once, but check anyway
+        // set a callback to broadcast/receive files by other before a file open
+        bool first_open = true;
         vol_plugin.set_before_file_open([&]()
         {
+            fmt::print(stderr, "--- Entering before file open callback ---\n");
+
+            if (local_.rank() == 0)
+            {
+                if (!first_open)
+                {
+                    fmt::print(stderr, "--- not first opening, root broadcasts files ---\n");
+                    vol_plugin.broadcast_files();
+                }
+            }
             if (local_.rank() > 0)
             {
-                fmt::print(stderr, "--- Entering before file open callback ---\n");
                 if (first_open)
                 {
-                    fmt::print(stderr, "--- first opening, receive broadcasted files ---\n");
+                    fmt::print(stderr, "--- first opening, nonroot receives broadcasted files ---\n");
                     vol_plugin.broadcast_files();
-                    first_open = false;
                 }
-                else
-                    fmt::print(stderr, "--- subsequent opening, do nothing ---\n");
-
-                fmt::print(stderr, "--- Leaving before file open callback ---\n");
             }
+
+            first_open = false;
+
+            fmt::print(stderr, "--- Leaving before file open callback ---\n");
         });
 
 #endif
