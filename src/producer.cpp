@@ -82,31 +82,25 @@ void producer_f (
         vol_plugin.set_keep(true);
 
         // set a callback to broadcast/receive files by other before a file open
-        bool first_open = true;
+        static int nopen = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
         vol_plugin.set_before_file_open([&]()
         {
-            fmt::print(stderr, "--- Entering before file open callback ---\n");
+            fmt::print(stderr, "--- Producer entering before file open callback nopen = {} ---\n", nopen);
 
-            if (local_.rank() == 0)
+            if (local_.rank() == 0 && nopen == 1)
             {
-                if (!first_open)
-                {
-                    fmt::print(stderr, "--- not first opening, root broadcasts files ---\n");
-                    vol_plugin.broadcast_files();
-                }
+                fmt::print(stderr, "--- root nopen = {}, broadcast files ---\n", nopen);
+                vol_plugin.broadcast_files();
             }
-            if (local_.rank() > 0)
+            if (local_.rank() > 0 && nopen == 0)
             {
-                if (first_open)
-                {
-                    fmt::print(stderr, "--- first opening, nonroot receives broadcasted files ---\n");
-                    vol_plugin.broadcast_files();
-                }
+                fmt::print(stderr, "--- nonroot nopen = {}, receive broadcasted files ---\n", nopen);
+                vol_plugin.broadcast_files();
             }
 
-            first_open = false;
+            nopen++;
 
-            fmt::print(stderr, "--- Leaving before file open callback ---\n");
+            fmt::print(stderr, "--- Produer leaving before file open callback nopen = {} ---\n", nopen);
         });
 
 #endif
