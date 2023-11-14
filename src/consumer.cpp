@@ -89,26 +89,15 @@ void consumer_f (
         vol_plugin.set_intercomm(infile, "*", 0);
 
         // set a callback to broadcast/receive files by other before a file open
-//         static int nopen = 0;            // needs to be static to be captured correctly in lambda, not sure why
-//         vol_plugin.set_before_file_open([&]()
-//         {
-//             fmt::print(stderr, "--- Consumer entering before file open callback nopen = {} ---\n", nopen);
-// 
-//             if (local_.rank() == 0 && nopen == 3)
-//             {
-//                 fmt::print(stderr, "--- consumer root, nopen = {}, broadcast files ---\n", nopen);
-//                 vol_plugin.broadcast_files();
-//             }
-//             if (local_.rank() > 0 && nopen == 1)
-//             {
-//                 fmt::print(stderr, "--- consumer nonroot nopen = {} receive broadcasted files ---\n", nopen);
-//                 vol_plugin.broadcast_files();
-//             }
-// 
-//             nopen++;
-// 
-//             fmt::print(stderr, "--- Consumer leaving before file open callback nopen = {} ---\n", nopen);
-//         });
+        static int nopen = 0;            // needs to be static to be captured correctly in lambda, not sure why
+        vol_plugin.set_before_file_open([&]()
+        {
+            if (local_.rank() == 0 && nopen == 2)
+                vol_plugin.broadcast_files();
+            if (local_.rank() > 0 && nopen == 1)
+                vol_plugin.broadcast_files();
+            nopen++;
+        });
 
         vol_plugin.set_keep(true);
 #endif
