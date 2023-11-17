@@ -90,13 +90,16 @@ void consumer_f (
 
         // set a callback to broadcast/receive files by other before a file open
         static int nopen = 0;            // needs to be static to be captured correctly in lambda, not sure why
-        vol_plugin.set_before_file_open([&]()
+        vol_plugin.set_before_file_open([&](const std::string& name)
         {
-            if (local_.rank() == 0 && nopen == 2)
+            if (name != outfile)
+                return;
+            if (nopen == 0)
+            {
+                fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen);
                 vol_plugin.broadcast_files();
-            if (local_.rank() > 0 && nopen == 1)
-                vol_plugin.broadcast_files();
-            nopen++;
+            }
+            nopen++;                    // only increment nopen when the file name matches
         });
 
         vol_plugin.set_keep(true);
@@ -121,8 +124,8 @@ void consumer_f (
     fmt::print(stderr, "*** consumer after reading file ***\n");
 
     // write file for debugging
-//     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
-//     fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
+    rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
+    fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
 
     // clean up
     if (!shared)

@@ -83,7 +83,7 @@ void producer_f (
 
         // set a callback to broadcast/receive files by other before a file open
         static int nopen = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
-        vol_plugin.set_before_file_open([&]()
+        vol_plugin.set_before_file_open([&](const std::string& name)
         {
             if (nopen == 0)
                 vol_plugin.broadcast_files();
