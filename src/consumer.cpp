@@ -23,7 +23,7 @@ void consumer_f (
     std::string infile      = "example1.h5m";
     std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS;DEBUG_IO=3;";
     std::string outfile     = "example1_cons.h5m";      // for debugging
-    std::string write_opts  = "PARALLEL=WRITE_PART";
+    std::string write_opts  = "PARALLEL=WRITE_PART;DEBUG_IO=6";
 
     // debug
     fmt::print(stderr, "consumer: local comm rank {} size {} metadata {} passthru {}\n",
@@ -87,6 +87,20 @@ void consumer_f (
         }
         vol_plugin.set_passthru(outfile, "*");      // outfile for debugging goes to disk
         vol_plugin.set_intercomm(infile, "*", 0);
+
+        // set a callback to broadcast/receive files by other before a file open
+        static int nopen = 0;            // needs to be static to be captured correctly in lambda, not sure why
+        vol_plugin.set_before_file_open([&](const std::string& name)
+        {
+            if (name != outfile)
+                return;
+            if (nopen == 0)
+            {
+                fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen);
+                vol_plugin.broadcast_files();
+            }
+            nopen++;                    // only increment nopen when the file name matches
+        });
 
         vol_plugin.set_keep(true);
 #endif

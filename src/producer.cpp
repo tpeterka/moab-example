@@ -25,7 +25,7 @@ void producer_f (
 {
     diy::mpi::communicator local_(local);
     std::string outfile     = "example1.h5m";
-    std::string write_opts  = "PARALLEL=WRITE_PART";
+    std::string write_opts  = "PARALLEL=WRITE_PART;DEBUG_IO=6";
 
     // debug
     fmt::print(stderr, "producer: local comm rank {} size {} metadata {} passthru {}\n",
@@ -80,6 +80,15 @@ void producer_f (
             vol_plugin.set_memory(outfile, "*");
         }
         vol_plugin.set_keep(true);
+
+        // set a callback to broadcast/receive files by other before a file open
+        static int nopen = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
+        vol_plugin.set_before_file_open([&](const std::string& name)
+        {
+            if (nopen == 0)
+                vol_plugin.broadcast_files();
+            nopen++;
+        });
 
 #endif
 
