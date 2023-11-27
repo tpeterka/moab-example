@@ -24,7 +24,7 @@ spack develop moab@5.3.0~cgm~coupler~dagmc+debug~fbigeom~fortran+hdf5~irel~metis
 spack add moab
 
 # add lowfive in develop mode
-spack develop lowfive@datatypes build_type=Debug
+spack develop lowfive@master build_type=Debug
 spack add lowfive
 
 # add moab-example in develop mode
