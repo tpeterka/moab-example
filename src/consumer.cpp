@@ -88,18 +88,43 @@ void consumer_f (
         vol_plugin.set_passthru(outfile, "*");      // outfile for debugging goes to disk
         vol_plugin.set_intercomm(infile, "*", 0);
 
+//         // set a callback to broadcast/receive files by other before a file open
+//         static int nopen = 0;            // needs to be static to be captured correctly in lambda, not sure why
+//         vol_plugin.set_before_file_open([&](const std::string& name)
+//         {
+//             if (name != outfile)
+//                 return;
+//             if (nopen == 0)
+//             {
+//                 fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen);
+//                 vol_plugin.broadcast_files();
+//             }
+//             nopen++;                    // only increment nopen when the file name matches
+//         });
+
         // set a callback to broadcast/receive files by other before a file open
-        static int nopen = 0;            // needs to be static to be captured correctly in lambda, not sure why
+        static int nopen_outfile = 0;           // needs to be static to be captured correctly in lambda, not sure why
+        static int nopen_infile  = 0;           // needs to be static to be captured correctly in lambda, not sure why
         vol_plugin.set_before_file_open([&](const std::string& name)
         {
-            if (name != outfile)
-                return;
-            if (nopen == 0)
+            if (name == infile)
             {
-                fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen);
-                vol_plugin.broadcast_files();
+                if (nopen_infile == 0)
+                {
+//                     fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen_infile);
+//                     vol_plugin.broadcast_files();
+                }
+                nopen_infile++;
             }
-            nopen++;                    // only increment nopen when the file name matches
+            else if (name == outfile)
+            {
+                if (nopen_outfile == 0)
+                {
+                    fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen_outfile);
+                    vol_plugin.broadcast_files();
+                }
+                nopen_outfile++;
+            }
         });
 
         vol_plugin.set_keep(true);
