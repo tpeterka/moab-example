@@ -80,14 +80,41 @@ void producer_f (
             vol_plugin.set_memory(outfile, "*");
         }
         vol_plugin.set_keep(true);
+        vol_plugin.serve_on_close = false;
 
-        // set a callback to broadcast/receive files by other before a file open
-        static int nopen = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
+//         // set a callback to broadcast/receive files before a file open
+//         static int nopen_bfo = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
+//         vol_plugin.set_before_file_open([&](const std::string& name)
+//         {
+//             if (nopen_bfo == 0)
+//                 vol_plugin.broadcast_files();
+//             nopen_bfo++;
+//         });
+
+        // set a callback to broadcast/receive files before a file open
         vol_plugin.set_before_file_open([&](const std::string& name)
         {
-            if (nopen == 0)
+            if (local_.rank() > 0)
                 vol_plugin.broadcast_files();
-            nopen++;
+        });
+
+        // set a callback to serve files after a file close
+        static int nopen_afc = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
+        vol_plugin.set_after_file_close([&](const std::string& name)
+        {
+            if (local_.rank() == 0)
+            {
+                if (nopen_afc > 0)
+                    if (!passthru)
+                        vol_plugin.serve_all();
+                else
+                    vol_plugin.broadcast_files();
+            }
+            else
+                if (!passthru)
+                    vol_plugin.serve_all();
+
+            nopen_afc++;
         });
 
 #endif

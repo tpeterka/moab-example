@@ -102,32 +102,34 @@ void consumer_f (
 //             nopen++;                    // only increment nopen when the file name matches
 //         });
 
-        // set a callback to broadcast/receive files by other before a file open
-        static int nopen_outfile = 0;           // needs to be static to be captured correctly in lambda, not sure why
-        static int nopen_infile  = 0;           // needs to be static to be captured correctly in lambda, not sure why
-        vol_plugin.set_before_file_open([&](const std::string& name)
-        {
-            if (name == infile)
-            {
-                if (nopen_infile == 0)
-                {
-//                     fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen_infile);
+//         // set a callback to broadcast/receive files by other before a file open
+//         static int nopen_outfile = 0;           // needs to be static to be captured correctly in lambda, not sure why
+//         static int nopen_infile  = 0;           // needs to be static to be captured correctly in lambda, not sure why
+//         vol_plugin.set_before_file_open([&](const std::string& name)
+//         {
+//             if (name == infile)
+//             {
+//                 if (nopen_infile == 0)
+//                 {
+// //                     fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen_infile);
+// //                     vol_plugin.broadcast_files();
+//                 }
+//                 nopen_infile++;
+//             }
+//             else if (name == outfile)
+//             {
+//                 if (nopen_outfile == 0)
+//                 {
+//                     fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen_outfile);
 //                     vol_plugin.broadcast_files();
-                }
-                nopen_infile++;
-            }
-            else if (name == outfile)
-            {
-                if (nopen_outfile == 0)
-                {
-                    fmt::print(stderr, "--- before file open name = {}, nopen = {}, broadcasting ---\n", name, nopen_outfile);
-                    vol_plugin.broadcast_files();
-                }
-                nopen_outfile++;
-            }
-        });
+//                 }
+//                 nopen_outfile++;
+//             }
+//         });
 
         vol_plugin.set_keep(true);
+        vol_plugin.serve_on_close = false;
+
 #endif
 
     }
@@ -149,8 +151,8 @@ void consumer_f (
     fmt::print(stderr, "*** consumer after reading file ***\n");
 
     // write file for debugging
-    rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
-    fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
+//     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
+//     fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
 
     // clean up
     if (!shared)
