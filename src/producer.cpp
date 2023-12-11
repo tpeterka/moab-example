@@ -95,24 +95,41 @@ void producer_f (
         vol_plugin.set_before_file_open([&](const std::string& name)
         {
             if (local_.rank() > 0)
+            {
+                fmt::print(stderr, "----- bfo broadcast_files -----\n");
                 vol_plugin.broadcast_files();
+            }
         });
 
         // set a callback to serve files after a file close
         static int nopen_afc = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
         vol_plugin.set_after_file_close([&](const std::string& name)
         {
+            fmt::print(stderr, "----- afc entry nopen_afc = {} -----\n", nopen_afc);
             if (local_.rank() == 0)
             {
-                if (nopen_afc > 0)
-                    if (!passthru)
-                        vol_plugin.serve_all();
-                else
+                if (nopen_afc == 0)
+                {
+                    fmt::print(stderr, "----- afc rank = 0 nopen_afc = {} broadcast_files -----\n", nopen_afc);
                     vol_plugin.broadcast_files();
+                }
+                else
+                {
+                    if (!passthru)
+                    {
+                        fmt::print(stderr, "----- afc rank = 0 nopen_afc = {} serve_all -----\n", nopen_afc);
+                        vol_plugin.serve_all();
+                    }
+                }
             }
             else
+            {
                 if (!passthru)
+                {
+                    fmt::print(stderr, "----- afc rank > 0 nopen_afc = {} serve_all -----\n", nopen_afc);
                     vol_plugin.serve_all();
+                }
+            }
 
             nopen_afc++;
         });
