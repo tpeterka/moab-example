@@ -34,8 +34,8 @@ void producer_f (
     // VOL plugin and properties
     hid_t plist;
 
-    int nopen_afc = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
-                                         //
+    int nafc = 0;               // number of times after file close callback was called
+
     if (shared)                 // single process, MetadataVOL test
     {
 
@@ -84,33 +84,21 @@ void producer_f (
         vol_plugin.set_keep(true);
         vol_plugin.serve_on_close = false;
 
-//         // set a callback to broadcast/receive files before a file open
-//         static int nopen_bfo = 0;                   // needs to be static in order to be captured correctly by lambda, not sure why
-//         vol_plugin.set_before_file_open([&](const std::string& name)
-//         {
-//             if (nopen_bfo == 0)
-//                 vol_plugin.broadcast_files();
-//             nopen_bfo++;
-//         });
-
         // set a callback to broadcast/receive files before a file open
         vol_plugin.set_before_file_open([&](const std::string& name)
         {
-            fmt::print(stderr, "----- bfo broadcast_files -----\n");
             vol_plugin.broadcast_files();
         });
 
         // set a callback to serve files after a file close
         vol_plugin.set_after_file_close([&](const std::string& name)
         {
-            fmt::print(stderr, "----- afc entry nopen_afc = {} -----\n", nopen_afc);
             if (local_.rank() == 0)
             {
-                if (nopen_afc > 0)
+                if (nafc > 0)
                 {
                     if (!passthru)
                     {
-                        fmt::print(stderr, "----- afc rank = 0 nopen_afc = {} serve_all -----\n", nopen_afc);
                         vol_plugin.serve_all();
                         vol_plugin.serve_all();
                     }
@@ -120,13 +108,12 @@ void producer_f (
             {
                 if (!passthru)
                 {
-                    fmt::print(stderr, "----- afc rank > 0 nopen_afc = {} serve_all -----\n", nopen_afc);
                     vol_plugin.serve_all();
                     vol_plugin.serve_all();
                 }
             }
 
-            nopen_afc++;
+            nafc++;
         });
 
 #endif

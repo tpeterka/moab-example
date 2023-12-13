@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 #ifdef LOWFIVE_PATH
 
     // lowfive logging
-    LowFive::create_logger("trace");
+//     LowFive::create_logger("trace");
 
 #endif
 
