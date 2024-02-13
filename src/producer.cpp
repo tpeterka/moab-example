@@ -24,6 +24,8 @@ void producer_f (
         int passthru)
 {
     diy::mpi::communicator local_(local);
+    std::string infile      = "/home/tpeterka/software/spack/var/spack/environments/moab-example-env/moab-example/sample_data/mpas_2d_source_p128.h5m";
+    std::string read_opts   = "PARALLEL=READ_PART;PARTITION=PARALLEL_PARTITION;PARALLEL_RESOLVE_SHARED_ENTS;DEBUG_IO=3;";
     std::string outfile     = "example1.h5m";
     std::string write_opts  = "PARALLEL=WRITE_PART;DEBUG_IO=6";
 
@@ -87,12 +89,18 @@ void producer_f (
         // set a callback to broadcast/receive files before a file open
         vol_plugin.set_before_file_open([&](const std::string& name)
         {
+            if (name != outfile)
+                return;
+
             vol_plugin.broadcast_files();
         });
 
         // set a callback to serve files after a file close
         vol_plugin.set_after_file_close([&](const std::string& name)
         {
+            if (name != outfile)
+                return;
+
             if (local_.rank() == 0)
             {
                 if (nafc > 0)
@@ -134,7 +142,22 @@ void producer_f (
     EntityHandle                    root;
     ErrorCode                       rval;
     rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
+
+#if 0
+
+    // create mesh in memory
     PrepMesh(mesh_type, mesh_size, mesh_slab, mbi, pc, root, factor, false);
+    fmt::print(stderr, "*** producer after creating mesh in memory ***\n");
+
+#else
+
+    // or
+
+    // read file
+    rval = mbi->load_file(infile.c_str(), &root, read_opts.c_str() ); ERR(rval);
+    fmt::print(stderr, "*** producer after reading file ***\n");
+
+#endif
 
     // write file
     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
