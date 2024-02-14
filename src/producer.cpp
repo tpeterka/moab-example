@@ -143,7 +143,7 @@ void producer_f (
     ErrorCode                       rval;
     rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
 
-#if 0
+#if 1
 
     // create mesh in memory
     PrepMesh(mesh_type, mesh_size, mesh_slab, mbi, pc, root, factor, false);
