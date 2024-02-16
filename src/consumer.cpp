@@ -39,38 +39,11 @@ void consumer_f (
     }
     fmt::print(stderr, "*** consumer after barrier completed! ***\n");
 
-    // VOL plugin and properties
-    hid_t plist;
-
     if (shared)                     // single process, MetadataVOL test
-    {
-
-#ifdef LOWFIVE_PATH
-
         fmt::print(stderr, "consumer: using shared mode MetadataVOL plugin created by prod-con\n");
-
-#endif
-
-    }
     else                            // normal multiprocess, DistMetadataVOL plugin
     {
-
-#ifdef LOWFIVE_PATH
-
         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
-
-#endif
-
-        plist = H5Pcreate(H5P_FILE_ACCESS);
-
-        if (passthru)
-            H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
-
-#ifdef LOWFIVE_PATH
-
-        l5::H5VOLProperty vol_prop(vol_plugin);
-        if (!getenv("HDF5_VOL_CONNECTOR"))
-            vol_prop.apply(plist);
 
         // set lowfive properties
         if (passthru)
@@ -103,9 +76,6 @@ void consumer_f (
             if (name == outfile)
                 vol_plugin.broadcast_files();
         });
-
-#endif
-
     }
 
     // initialize moab
@@ -127,9 +97,5 @@ void consumer_f (
     // write file for debugging
     rval = mbi->write_file(outfile.c_str(), 0, write_opts.c_str(), &root, 1); ERR(rval);
     fmt::print(stderr, "*** consumer wrote the file for debug ***\n");
-
-    // clean up
-    if (!shared)
-        H5Pclose(plist);
 }
 

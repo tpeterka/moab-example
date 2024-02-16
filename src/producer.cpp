@@ -33,40 +33,13 @@ void producer_f (
     fmt::print(stderr, "producer: local comm rank {} size {} metadata {} passthru {}\n",
             local_.rank(), local_.size(), metadata, passthru);
 
-    // VOL plugin and properties
-    hid_t plist;
-
     int nafc = 0;               // number of times after file close callback was called
 
     if (shared)                 // single process, MetadataVOL test
-    {
-
-#ifdef LOWFIVE_PATH
-
         fmt::print(stderr, "producer: using shared mode MetadataVOL plugin created by prod-con\n");
-
-#endif
-
-    }
     else                        // normal multiprocess, DistMetadataVOL plugin
     {
-
-#ifdef LOWFIVE_PATH
-
         l5::DistMetadataVOL& vol_plugin = l5::DistMetadataVOL::create_DistMetadataVOL(local, intercomms);
-
-#endif
-
-        plist = H5Pcreate(H5P_FILE_ACCESS);
-
-        if (passthru)
-            H5Pset_fapl_mpio(plist, local, MPI_INFO_NULL);
-
-#ifdef LOWFIVE_PATH
-
-        l5::H5VOLProperty vol_prop(vol_plugin);
-        if (!getenv("HDF5_VOL_CONNECTOR"))
-            vol_prop.apply(plist);
 
         // set lowfive properties
         if (passthru)
@@ -83,6 +56,9 @@ void producer_f (
 
             vol_plugin.set_memory(outfile, "*");
         }
+        vol_plugin.set_passthru(infile, "*");      // infile comes from disk
+        vol_plugin.set_intercomm(infile, "*", 0);
+
         vol_plugin.set_keep(true);
         vol_plugin.serve_on_close = false;
 
@@ -121,14 +97,7 @@ void producer_f (
 
             nafc++;
         });
-
-#endif
-
     }
-
-
-    // debug
-    fmt::print(stderr, "*** producer generating moab mesh ***\n");
 
     // create moab mesh
     int                             mesh_type = 0;                          // source mesh type (0 = hex, 1 = tet)
@@ -144,6 +113,7 @@ void producer_f (
 #if 1
 
     // create mesh in memory
+    fmt::print(stderr, "*** producer generating synthetic mesh in memory ***\n");
     PrepMesh(mesh_type, mesh_size, mesh_slab, mbi, pc, root, factor, false);
     fmt::print(stderr, "*** producer after creating mesh in memory ***\n");
 
@@ -152,6 +122,7 @@ void producer_f (
     // or
 
     // read file
+    fmt::print(stderr, "*** producer reading input file ***\n");
     rval = mbi->load_file(infile.c_str(), &root, read_opts.c_str() ); ERR(rval);
     fmt::print(stderr, "*** producer after reading file ***\n");
 
@@ -162,9 +133,6 @@ void producer_f (
 
     // debug
     fmt::print(stderr, "*** producer after writing file ***\n");
-
-    if (!shared)
-        H5Pclose(plist);
 
     // signal the consumer that data are ready
     if (passthru && !metadata && !shared)

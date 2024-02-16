@@ -121,7 +121,6 @@ int main(int argc, char* argv[])
     }
 
     // shared MetadataVol plugin
-    hid_t plist;
     if (shared)
     {
 
@@ -130,20 +129,6 @@ int main(int argc, char* argv[])
         l5::MetadataVOL& shared_vol_plugin = l5::MetadataVOL::create_MetadataVOL();
         fmt::print(stderr, "prod-con: creating new shared mode MetadataVOL plugin\n");
 
-#endif
-
-        plist = H5Pcreate(H5P_FILE_ACCESS);
-
-        if (passthru)
-            H5Pset_fapl_mpio(plist, world, MPI_INFO_NULL);
-
-#ifdef LOWFIVE_PATH
-
-        l5::H5VOLProperty vol_prop(shared_vol_plugin);
-        if (!getenv("HDF5_VOL_CONNECTOR"))
-            vol_prop.apply(plist);
-
-        // set lowfive properties
         if (passthru)
             shared_vol_plugin.set_passthru(filename, "*");
         if (metadata)
@@ -220,9 +205,6 @@ int main(int argc, char* argv[])
         if (world.rank() == 0)
             fmt::print(stderr, "Elapsed time for trial {}\t\t{:.4f} s.\n", i, times[i]);
     }
-
-    if (shared)
-        H5Pclose(plist);
 
     // timing stats
     double mean_time    = sum_time / ntrials;
