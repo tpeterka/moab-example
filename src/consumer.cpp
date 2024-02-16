@@ -90,8 +90,12 @@ void consumer_f (
         vol_plugin.set_passthru(outfile, "*");      // outfile for debugging goes to disk
         vol_plugin.set_intercomm(infile, "*", 0);
 
+        vol_plugin.set_keep(true);
+        vol_plugin.serve_on_close = false;
+
         // even though this is the consumer, it produces a file for debugging at the end of its execution
         // hence, the producer-like callbacks below when the filename is outfile
+        // however, no after_file_close callback because the outfile is always passthru (file on disk)
 
         // set a callback to broadcast/receive files before a file open
         vol_plugin.set_before_file_open([&](const std::string& name)
@@ -99,38 +103,6 @@ void consumer_f (
             if (name == outfile)
                 vol_plugin.broadcast_files();
         });
-
-        // set a callback to serve files after a file close
-        vol_plugin.set_after_file_close([&](const std::string& name)
-        {
-            if (name != outfile)
-                return;
-
-            if (local_.rank() == 0)
-            {
-                if (nafc > 0)
-                {
-                    if (!passthru)
-                    {
-                        vol_plugin.serve_all();
-                        vol_plugin.serve_all();
-                    }
-                }
-            }
-            else
-            {
-                if (!passthru)
-                {
-                    vol_plugin.serve_all();
-                    vol_plugin.serve_all();
-                }
-            }
-
-            nafc++;
-        });
-
-        vol_plugin.set_keep(true);
-        vol_plugin.serve_on_close = false;
 
 #endif
 

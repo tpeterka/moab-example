@@ -89,10 +89,8 @@ void producer_f (
         // set a callback to broadcast/receive files before a file open
         vol_plugin.set_before_file_open([&](const std::string& name)
         {
-            if (name != outfile)
-                return;
-
-            vol_plugin.broadcast_files();
+            if (name == outfile)
+                vol_plugin.broadcast_files();
         });
 
         // set a callback to serve files after a file close
