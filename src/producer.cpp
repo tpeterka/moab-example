@@ -72,9 +72,11 @@ void producer_f (
         // set a callback to serve files after a file close
         vol_plugin.set_after_file_close([&](const std::string& name)
         {
+            fmt::print(stderr, "##### producer afc 1: name = {}\n", name);
             if (name != outfile)
                 return;
 
+            fmt::print(stderr, "##### producer afc 2: name = {} nafc = {}\n", name, nafc);
             if (local_.rank() == 0)
             {
                 if (nafc > 0)
@@ -96,6 +98,7 @@ void producer_f (
             }
 
             nafc++;
+            fmt::print(stderr, "##### producer afc 3: name = {} nafc = {}\n", name, nafc);
         });
     }
 
@@ -110,7 +113,7 @@ void producer_f (
     ErrorCode                       rval;
     rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
 
-#if 1
+#if 0
 
     // create mesh in memory
     fmt::print(stderr, "*** producer generating synthetic mesh in memory ***\n");
