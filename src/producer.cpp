@@ -72,16 +72,14 @@ void producer_f (
         // set a callback to serve files after a file close
         vol_plugin.set_after_file_close([&](const std::string& name)
         {
-            fmt::print(stderr, "##### producer afc 1: name = {}\n", name);
             if (name != outfile)
                 return;
 
-            fmt::print(stderr, "##### producer afc 2: name = {} nafc = {}\n", name, nafc);
             if (local_.rank() == 0)
             {
                 if (nafc > 0)
                 {
-                    if (!passthru)
+                    if (!vol_plugin.is_passthru(outfile, "*"))
                     {
                         vol_plugin.serve_all();
                         vol_plugin.serve_all();
@@ -90,7 +88,7 @@ void producer_f (
             }
             else
             {
-                if (!passthru)
+                if (!vol_plugin.is_passthru(outfile, "*"))
                 {
                     vol_plugin.serve_all();
                     vol_plugin.serve_all();
@@ -98,7 +96,6 @@ void producer_f (
             }
 
             nafc++;
-            fmt::print(stderr, "##### producer afc 3: name = {} nafc = {}\n", name, nafc);
         });
     }
 
