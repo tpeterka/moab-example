@@ -32,7 +32,6 @@ spack repo add .
 ### First time: create and load the Spack environment
 
 ```
-git clone https://github.com/tpeterka/moab-example
 cd /path/to/moab-example
 source ./create-env.sh     # requires being in the same directory to work properly
 ```
