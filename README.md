@@ -2,6 +2,31 @@
 
 Installation is done through Spack. If you don't have Spack installed or if Spack is new to you, go [here](https://spack.readthedocs.io/en/latest/) first.
 
+-----
+
+## Clone this repository
+
+```
+git clone https://github.com/tpeterka/moab-example
+```
+
+-----
+
+## First time: Add the following Spack repositories to your local Spack installation
+
+LowFive
+```
+git clone https://github.com/diatomic/LowFive
+spack repo add Lowfive
+```
+
+Moab-example
+```
+cd /path/to/moab-example
+spack repo add .
+```
+
+-----
 ## Setting up Spack environment
 
 ### First time: create and load the Spack environment
