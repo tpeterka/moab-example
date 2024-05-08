@@ -110,7 +110,7 @@ void producer_f (
     ErrorCode                       rval;
     rval = mbi->create_meshset(MESHSET_SET, root); ERR(rval);
 
-#if 0
+#if 1
 
     // create mesh in memory
     fmt::print(stderr, "*** producer generating synthetic mesh in memory ***\n");
