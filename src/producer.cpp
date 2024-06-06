@@ -69,6 +69,14 @@ void producer_f (
                 vol_plugin.broadcast_files();
         });
 
+        // set a callback to indicate noncollective dataset writes (e.g., only rank 0 writes the history dset)
+        vol_plugin.set_noncollective_datasets([&]()
+        {
+            std::set<std::string> noncollective_datasets;
+            noncollective_datasets.insert("history");
+            return noncollective_datasets;
+        });
+
         // set a callback to serve files after a file close
         vol_plugin.set_after_file_close([&](const std::string& name)
         {
