@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
 
 #ifdef LOWFIVE_PATH
 
-    // lowfive logging
-//     LowFive::create_logger("trace");
+     //lowfive logging
+     LowFive::create_logger("trace");
 
 #endif
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
         shared = true;
 
     if (!shared && world.rank() == 0)
-        fmt::print(stderr, "space partitioning: producer_ranks: {} consumer_ranks: {}\n", producer_ranks, world.size() - producer_ranks);
+        fmt::print(stderr, "ORC: space partitioning: producer_ranks: {} consumer_ranks: {}\n", producer_ranks, world.size() - producer_ranks);
     if (shared && world.rank() == 0)
         fmt::print(stderr, "space sharing: producer_ranks = consumer_ranks = world: {}\n", world.size());
 
